@@ -1,4 +1,5 @@
 pyrightconfig.json
+__main__.py
 
 
 # Byte-compiled / optimized / DLL files
