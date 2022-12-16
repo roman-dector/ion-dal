@@ -1,0 +1,7 @@
+{
+	 "include": [
+	    "dal"
+	  ],
+	"venv": "ion-api",
+	"venvPath": "~/.pyenv/versions/3.11.0/envs/ion-api"
+}
