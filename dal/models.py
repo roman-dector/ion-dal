@@ -1,3 +1,6 @@
+from pprint import pprint
+from typing import NamedTuple
+
 from peewee import (
     fn,
 
@@ -14,6 +17,13 @@ from dal.config import DB_PATH
 
 
 db = SqliteDatabase(DB_PATH)
+
+
+class IonData(NamedTuple):
+    datetime: str
+    f0f2: float
+    tec: float
+    b0: float
 
 
 class Station(Model):
@@ -55,7 +65,6 @@ def select_original_for_day(
     ursi: str,
     date: str,
 ) -> ModelSelect:
-
     return StationData.select().where(
         StationData.ursi == ursi
     ).where(
@@ -67,19 +76,17 @@ def select_hour_avr_for_day(
     ursi: str,
     date: str,
 ) -> ModelSelect:
-
     return select_original_for_day(ursi, date).select(
-        fn.strftime('%H', StationData.time).alias('hour'),
+        fn.strftime('%H', StationData.time).alias('datetime'),
         fn.AVG(StationData.f0f2).alias('f0f2'),
         fn.AVG(StationData.tec).alias('tec'),
         fn.AVG(StationData.b0).alias('b0'),
     ).group_by(fn.strftime('%H', StationData.time))
 
 
-
 def select_day_avr_for_year(ursi: str, year: int) -> ModelSelect:
     return StationData.select(
-        StationData.date,
+        StationData.date.alias('datetime'),
         fn.AVG(StationData.f0f2).alias('f0f2'),
         fn.AVG(StationData.tec).alias('tec'),
         fn.AVG(StationData.b0).alias('b0'),
@@ -90,7 +97,12 @@ def select_day_avr_for_year(ursi: str, year: int) -> ModelSelect:
     ).group_by(StationData.date)
 
 
+def transform_data(data: ModelSelect) -> tuple[IonData]:
+    return tuple([
+        IonData(d.datetime, d.f0f2, d.tec, d.b0) for d in data
+    ])
+
+
 if __name__ == '__main__':
-    for q in select_hour_avr_for_day('AL945', '2019-01-01'):
-        print(q.tec)
+    pprint(transform_data(select_hour_avr_for_day('AL945', '2019-01-01')))
 
