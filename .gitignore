@@ -127,5 +127,5 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-dal/__main__.py
-pyrightconfig.json
+*/__main__.py
+*/pyrightconfig.json
