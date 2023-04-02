@@ -61,6 +61,13 @@ def select_coords_by_ursi(ursi: str) -> dict[str, float]:
     return {'lat': station.lat, 'long': station.long}
 
 
+def select_middle_lat_stations() -> list[str]:
+    noth = Station.select().where(Station.lat >= 30.0 & Station.lat <= 60.0)
+    south = Station.select().where(Station.lat <= -30.0 & Station.lat >= -60.0)
+
+    return tuple([s.ursi for s in [*noth, *south]])
+
+
 def select_original_for_day(
     ursi: str,
     date: str,
@@ -104,5 +111,5 @@ def transform_data(data: ModelSelect) -> tuple[IonData]:
 
 
 if __name__ == '__main__':
-    pprint(transform_data(select_hour_avr_for_day('AL945', '2019-01-01')))
+    pprint(select_middle_lat_stations())
 
