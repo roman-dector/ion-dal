@@ -62,8 +62,13 @@ def select_coords_by_ursi(ursi: str) -> dict[str, float]:
 
 
 def select_middle_lat_stations() -> list[str]:
-    noth = Station.select().where(Station.lat >= 30.0 & Station.lat <= 60.0)
-    south = Station.select().where(Station.lat <= -30.0 & Station.lat >= -60.0)
+    noth = Station.select().where(
+        Station.lat >= 30.0
+    ).where(Station.lat <= 60.0)
+
+    south = Station.select().where(
+        Station.lat <= -30.0
+    ).where(Station.lat >= -60.0)
 
     return tuple([s.ursi for s in [*noth, *south]])
 
@@ -111,5 +116,5 @@ def transform_data(data: ModelSelect) -> tuple[IonData]:
 
 
 if __name__ == '__main__':
-    pprint(select_middle_lat_stations())
+    pprint(len(select_middle_lat_stations()))
 
