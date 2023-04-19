@@ -42,17 +42,19 @@ def is_data_correct(values: list[list[str]]) -> bool:
 
 def remove_delemiters(values: list[list[str]]) -> list[list[str]]:
     idxs = [-(k*2 -1) for k in range(1, int((len(values[0]) - 2) / 2) + 1)]
+    idxs.reverse()
     for v in values:
         for i in idxs:
             del v[i]
 
     return values
 
-# def remove_delemiters(values: list[list[str]]) -> list[list[str]]:
-#     for v in values:
-#         del v[-3]
-#         del v[-1]
-#     return values
+#def remove_delemiters(values: list[list[str]]) -> list[list[str]]:
+#    if len
+#    for v in values:
+#        del v[-3]
+#        del v[-1]
+#    return values
 
 def convert_iso_to_datetime(iso_timestamp: str) -> datetime:
     return datetime.fromisoformat(iso_timestamp.removesuffix('Z'))
@@ -109,7 +111,9 @@ def transform_ion_response(resp: str) -> list[list[str]]:
     values = remove_empty_rows(values)
 
     if is_data_correct(values):
+        print(values[0])
         values = remove_delemiters(values)
+        print(values[0])
         values = convert_time(values)
         values = separate_date_time(values)
 

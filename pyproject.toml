@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dal"
-version = "0.1.3"
+version = "0.1.4"
 description = ""
 authors = ["roman-dector <roman.schaposhnikov@gmail.com>"]
 
@@ -9,6 +9,7 @@ python = "^3.11"
 requests = "^2.28.1"
 beautifulsoup4 = "^4.11.1"
 peewee = "^3.15.4"
+plot = {git = "git@github.com:roman-dector/ion-plot.git", branch = "main" }
 
 [tool.poetry.dev-dependencies]
 

@@ -55,6 +55,20 @@ class StationData(Model):
         table_name= 'station_data'
 
 
+class F0f2KMeanDay(Model):
+    id = AutoField()
+    ursi = TextField()
+    date = TextField()
+    sun_k = FloatField()
+    sun_k_err = FloatField()
+    moon_k = FloatField()
+    moon_k_err = FloatField()
+
+    class Meta:
+        database = db
+        table_name= 'f0f2_k_mean_day'
+
+
 def select_coords_by_ursi(ursi: str) -> dict[str, float]:
     station = Station.get(Station.ursi == ursi)
 
@@ -87,8 +101,11 @@ def select_original_for_day(
 def select_hour_avr_for_day(
     ursi: str,
     date: str,
+    cs_floor: int=70,
 ) -> ModelSelect:
-    return select_original_for_day(ursi, date).select(
+    return select_original_for_day(ursi, date).where(
+        StationData.accuracy >= cs_floor
+        ).select(
         fn.strftime('%H', StationData.time).alias('datetime'),
         fn.AVG(StationData.f0f2).alias('f0f2'),
         fn.AVG(StationData.tec).alias('tec'),
