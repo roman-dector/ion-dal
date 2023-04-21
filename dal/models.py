@@ -176,7 +176,7 @@ def select_2h_avr_for_day_with_sat_tec(
     date: str,
     cs_floor: int=70,
 ) -> ModelSelect:
-    sat_tec = select_2h_avr_sat_tec(ursi, date)
+    sat_tec = select_2h_avr_sat_tec(ursi, date).alias('sat_tec')
 
     subselect = select_original_for_day(ursi, date).where(
         (StationData.accuracy >= cs_floor) | (StationData.accuracy == -1)
@@ -185,17 +185,17 @@ def select_2h_avr_for_day_with_sat_tec(
         fn.AVG(StationData.f0f2).alias('f0f2'),
         fn.AVG(StationData.tec).alias('tec'),
         fn.AVG(StationData.b0).alias('b0'),
-    ).group_by(fn.strftime('%H', StationData.time))
+    ).group_by(fn.strftime('%H', StationData.time)).alias('subselect')
 
     subselect = subselect.select(
-        (two_hour_time_groups[subselect['datetime']]).alias('time'),
-        fn.AVG(subselect['f0f2']),
-        fn.AVG(subselect['tec']),
-        fn.AVG(subselect['b0']),
-    ).group_by(two_hour_time_groups[subselect['datetime']])
+        (two_hour_time_groups[subselect.datetime]).alias('time'),
+        fn.AVG(subselect.c.f0f2),
+        fn.AVG(subselect.c.tec),
+        fn.AVG(subselect.c.b0),
+    ).group_by(two_hour_time_groups[subselect.c.datetime]).alias('subselect')
 
     return subselect.join(
-        sat_tec, on=(subselect['time'] == sat_tec['time']),
+        sat_tec, on=(subselect.c.time == sat_tec.c.time),
     )
 
 
