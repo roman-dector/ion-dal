@@ -181,7 +181,7 @@ def select_2h_avr_for_day_with_sat_tec(
     sub_sel = select_original_for_day(ursi, date).where(
         (StationData.accuracy >= cs_floor) | (StationData.accuracy == -1)
     ).select(
-        fn.strftime('%H', StationData.time).alias('time'),
+        fn.strftime('%H', StationData.time).alias('datetime'),
         fn.AVG(StationData.f0f2).alias('f0f2'),
         fn.AVG(StationData.tec).alias('tec'),
         fn.AVG(StationData.b0).alias('b0'),
@@ -190,7 +190,7 @@ def select_2h_avr_for_day_with_sat_tec(
     ).alias('sub_sel')
 
     return sub_sel.join(
-        sat_tec, on=(sub_sel.c.time == sat_tec.c.time),
+        sat_tec, on=(sub_sel.c.datetime == sat_tec.c.time),
     )
 
 
