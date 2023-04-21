@@ -188,7 +188,7 @@ def select_2h_avr_for_day_with_sat_tec(
     ).group_by(fn.strftime('%H', StationData.time)).alias('subselect')
 
     subselect = subselect.select(
-        (two_hour_time_groups[subselect.datetime]).alias('time'),
+        (two_hour_time_groups[subselect.c.datetime]).alias('time'),
         fn.AVG(subselect.c.f0f2),
         fn.AVG(subselect.c.tec),
         fn.AVG(subselect.c.b0),
