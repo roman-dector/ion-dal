@@ -69,6 +69,47 @@ class F0f2KMeanDay(Model):
         table_name= 'f0f2_k_mean_day'
 
 
+class SatelliteTEC(Model):
+    id = AutoField()
+    date = TextField()
+    time = TextField()
+    tec = FloatField()
+    lat = FloatField()
+    long = FloatField()
+
+    class Meta:
+        database = db
+        table_name= 'satellite_tec'
+
+
+two_hour_time_groups = {
+    '00': 0,
+    '01': 0,
+    '02': 2,
+    '03': 2,
+    '04': 4,
+    '05': 4,
+    '06': 6,
+    '07': 6,
+    '08': 8,
+    '09': 8,
+    '10': 10,
+    '11': 10,
+    '12': 12,
+    '13': 12,
+    '14': 14,
+    '15': 14,
+    '16': 16,
+    '17': 16,
+    '18': 18,
+    '19': 18,
+    '20': 20,
+    '21': 20,
+    '22': 22,
+    '23': 22,
+}
+
+
 def select_coords_by_ursi(ursi: str) -> dict[str, float]:
     station = Station.get(Station.ursi == ursi)
 
@@ -104,13 +145,58 @@ def select_hour_avr_for_day(
     cs_floor: int=70,
 ) -> ModelSelect:
     return select_original_for_day(ursi, date).where(
-        StationData.accuracy >= cs_floor
+        (StationData.accuracy >= cs_floor) | (StationData.accuracy == -1)
         ).select(
         fn.strftime('%H', StationData.time).alias('datetime'),
         fn.AVG(StationData.f0f2).alias('f0f2'),
         fn.AVG(StationData.tec).alias('tec'),
         fn.AVG(StationData.b0).alias('b0'),
     ).group_by(fn.strftime('%H', StationData.time))
+
+
+def select_2h_avr_sat_tec(
+    ursi: str,
+    date: str,
+):
+    coords = select_coords_by_ursi(ursi)
+    return SatelliteTEC.select(
+        fn.strftime('%H', SatelliteTEC.time).alias('time'),
+        SatelliteTEC.tec.alias('sat_tec'),
+        SatelliteTEC.lat.alias('sat_lat'),
+        SatelliteTEC.lat.alias('sat_long'),
+    ).where(
+        SatelliteTEC.date == date
+    ).where(
+        ((SatelliteTEC.lat - coords.lat) < 2.5) & ((SatelliteTEC.long - coords.lat) < 5)
+    )
+
+
+def select_2h_avr_for_day_with_sat_tec(
+    ursi: str,
+    date: str,
+    cs_floor: int=70,
+) -> ModelSelect:
+    sat_tec = select_2h_avr_sat_tec(ursi, date)
+
+    subselect = select_original_for_day(ursi, date).where(
+        (StationData.accuracy >= cs_floor) | (StationData.accuracy == -1)
+        ).select(
+        fn.strftime('%H', StationData.time).alias('datetime'),
+        fn.AVG(StationData.f0f2).alias('f0f2'),
+        fn.AVG(StationData.tec).alias('tec'),
+        fn.AVG(StationData.b0).alias('b0'),
+    ).group_by(fn.strftime('%H', StationData.time))
+
+    subselect = subselect.select(
+        (two_hour_time_groups[subselect.datetime]).alias('time'),
+        fn.AVG(subselect.f0f2),
+        fn.AVG(subselect.tec),
+        fn.AVG(subselect.b0),
+    ).group_by(two_hour_time_groups[subselect.datetime])
+
+    return subselect.join(
+        sat_tec, on=(subselect.time == sat_tec.time),
+    )
 
 
 def select_day_avr_for_year(ursi: str, year: int) -> ModelSelect:
