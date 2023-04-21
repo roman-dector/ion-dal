@@ -167,7 +167,7 @@ def select_2h_avr_sat_tec(
     ).where(
         SatelliteTEC.date == date
     ).where(
-        ((SatelliteTEC.lat - coords.lat) < 2.5) & ((SatelliteTEC.long - coords.lat) < 5)
+        ((SatelliteTEC.lat - coords['lat']) < 2.5) & ((SatelliteTEC.long - coords['lat']) < 5)
     )
 
 
