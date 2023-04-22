@@ -1,5 +1,6 @@
 from pprint import pprint
 from typing import NamedTuple
+from sqlite3 import connect as con
 
 from peewee import (
     fn,
@@ -18,11 +19,21 @@ from dal.config import DB_PATH
 
 db = SqliteDatabase(DB_PATH)
 
+connection = con(DB_PATH)
+cur = connection.cursor()
+
 
 class IonData(NamedTuple):
     datetime: str
     f0f2: float
     tec: float
+    b0: float
+
+class SatData(NamedTuple):
+    datetime: str
+    f0f2: float
+    tec: float
+    sat_tec: float
     b0: float
 
 
@@ -176,24 +187,42 @@ def select_2h_avr_for_day_with_sat_tec(
     date: str,
     cs_floor: int=70,
 ) -> ModelSelect:
-    sat_tec = select_2h_avr_sat_tec(ursi, date)
+    coords = select_coords_by_ursi(ursi)
 
-    return select_original_for_day(ursi, date).where(
-        (StationData.accuracy >= cs_floor) | (StationData.accuracy == -1)
-    ).select(
-        fn.strftime('%H', StationData.time).alias('datetime'),
-        fn.AVG(StationData.f0f2).alias('f0f2'),
-        fn.AVG(StationData.tec).alias('tec'),
-        fn.AVG(StationData.b0).alias('b0'),
-    ).group_by(
-        fn.strftime('%H', StationData.time)
-    ).join(
-        sat_tec, on=(fn.strftime('%H', StationData.time) == sat_tec.c.time),
+    res = cur.execute(f'''with ion_table as (
+             select
+                 strftime('%H', time) as datetime,
+                 ROUND(AVG(f0f2),1) as f0f2,
+                 ROUND(AVG(tec),1) as tec,
+                 ROUND(AVG(b0),1) as b0,
+                 lat,
+                 long
+             from station_data
+             join station on station.ursi = station_data.ursi
+             where station_data.ursi='{ursi}'
+                and date like '{date}'
+                and (accuracy >= {cs_floor} or accuracy = -1)
+             group by datetime
+         ),
+         sat_table as (
+             select
+                 strftime('%H', time) as datetime,
+                 tec as sat_tec,
+                 lat,
+                 long
+             from satellite_tec
+             where date like '{date}'
+                and (ABS(lat - {coords['lat']}) < 1.25)
+                and (ABS(long - IIF({coords['long']} > 180, {coords['long']} - 360, {coords['long']})) < 2.5)
+                and tec != 999.9
+         )
+         select
+             sat_table.datetime as datetime,
+             f0f2, tec, sat_tec, b0
+         from sat_table
+         left join ion_table on ion_table.datetime = sat_table.datetime;'''
     )
-
-    # return sub_sel.join(
-    #     sat_tec, on=(sub_sel.c.datetime == sat_tec.c.time),
-    # )
+    return res.fetchall()
 
 
 def select_day_avr_for_year(ursi: str, year: int) -> ModelSelect:
@@ -209,12 +238,19 @@ def select_day_avr_for_year(ursi: str, year: int) -> ModelSelect:
     ).group_by(StationData.date)
 
 
-def transform_data(data: ModelSelect) -> tuple[IonData]:
+def transform_ion_data(data: ModelSelect) -> tuple[IonData]:
     return tuple([
         IonData(d.datetime, d.f0f2, d.tec, d.b0) for d in data
     ])
 
+def transform_sat_data(data: ModelSelect) -> tuple[IonData]:
+    return tuple([
+        SatData(d[0], d[1], d[2], d[3], d[4]) for d in data
+    ])
+
 
 if __name__ == '__main__':
-    pprint(len(select_middle_lat_stations()))
+    pprint(transform_sat_data(
+        select_2h_avr_for_day_with_sat_tec('PA836', '2019-01-01')
+    ))
 
