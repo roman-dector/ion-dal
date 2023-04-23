@@ -1,5 +1,8 @@
 handlers.py
 *.txt
+.netrc
+sat_tec.py
+ionex.py
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

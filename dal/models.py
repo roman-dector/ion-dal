@@ -2,6 +2,9 @@ from pprint import pprint
 from typing import NamedTuple
 from sqlite3 import connect as con
 
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+
 from peewee import (
     fn,
 
@@ -93,6 +96,17 @@ class SatelliteTEC(Model):
         table_name= 'satellite_tec'
 
 
+class SolarFlux(Model):
+    id = AutoField()
+    date = TextField()
+    time = TextField()
+    flux = FloatField()
+
+    class Meta:
+        database = db
+        table_name= 'solar_flux'
+
+
 two_hour_time_groups = {
     '00': 0,
     '01': 0,
@@ -119,6 +133,31 @@ two_hour_time_groups = {
     '22': 22,
     '23': 22,
 }
+
+
+def select_solar_flux_day_mean(date: str):
+    flux = SolarFlux.select(
+        fn.AVG(SolarFlux.flux).alias('flux')
+    ).where(
+        SolarFlux.date == date
+    ).group_by(SolarFlux.date)
+
+    return flux[0].flux
+
+
+def select_solar_flux_81_mean(date: str):
+    dt = datetime.strptime(date, '%Y-%m-%d')
+    low_dt = dt + relativedelta(days=-40)
+    high_dt = dt + relativedelta(days=+40)
+
+    flux = SolarFlux.select(
+        fn.AVG(SolarFlux.flux).alias('flux')
+    ).where(
+        (SolarFlux.date <= high_dt.strftime('%Y-%m-%d')) &
+        (SolarFlux.date >= low_dt.strftime('%Y-%m-%d'))
+    ).group_by(SolarFlux.date)
+
+    return flux[0].flux
 
 
 def select_coords_by_ursi(ursi: str) -> dict[str, float]:
@@ -165,21 +204,21 @@ def select_hour_avr_for_day(
     ).group_by(fn.strftime('%H', StationData.time))
 
 
-def select_2h_avr_sat_tec(
-    ursi: str,
-    date: str,
-):
-    coords = select_coords_by_ursi(ursi)
-    return SatelliteTEC.select(
-        fn.strftime('%H', SatelliteTEC.time).alias('time'),
-        SatelliteTEC.tec.alias('sat_tec'),
-        SatelliteTEC.lat.alias('sat_lat'),
-        SatelliteTEC.lat.alias('sat_long'),
-    ).where(
-        SatelliteTEC.date == date
-    ).where(
-        ((SatelliteTEC.lat - coords['lat']) < 2.5) & ((SatelliteTEC.long - coords['lat']) < 5)
-    )
+# def select_2h_avr_sat_tec(
+#     ursi: str,
+#     date: str,
+# ):
+#     coords = select_coords_by_ursi(ursi)
+#     return SatelliteTEC.select(
+#         fn.strftime('%H', SatelliteTEC.time).alias('time'),
+#         SatelliteTEC.tec.alias('sat_tec'),
+#         SatelliteTEC.lat.alias('sat_lat'),
+#         SatelliteTEC.lat.alias('sat_long'),
+#     ).where(
+#         SatelliteTEC.date == date
+#     ).where(
+#         ((SatelliteTEC.lat - coords['lat']) < 2.5) & ((SatelliteTEC.long - coords['lat']) < 5)
+#     )
 
 
 def select_2h_avr_for_day_with_sat_tec(
@@ -250,7 +289,6 @@ def transform_sat_data(data: ModelSelect) -> tuple[IonData]:
 
 
 if __name__ == '__main__':
-    pprint(transform_sat_data(
-        select_2h_avr_for_day_with_sat_tec('PA836', '2019-01-01')
-    ))
+    pprint(select_solar_flux_day_mean('2019-01-01'))
+    print(select_solar_flux_81_mean('2019-01-01'))
 

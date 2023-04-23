@@ -25,4 +25,3 @@ def get_ion_values(
 def read_ion_values(file_path: str) -> list[list[str]]:
     with open(file_path, 'r') as file:
         return transform_ion_response(file.read())
-

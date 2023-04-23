@@ -49,12 +49,6 @@ def remove_delemiters(values: list[list[str]]) -> list[list[str]]:
 
     return values
 
-#def remove_delemiters(values: list[list[str]]) -> list[list[str]]:
-#    if len
-#    for v in values:
-#        del v[-3]
-#        del v[-1]
-#    return values
 
 def convert_iso_to_datetime(iso_timestamp: str) -> datetime:
     return datetime.fromisoformat(iso_timestamp.removesuffix('Z'))
@@ -70,15 +64,6 @@ def convert_time(values: list[list[str]]) -> list[list[datetime]]:
             raise ConvertISOError
     return res
 
-# def separate_date_time(values: list[list[datetime]]) -> list[list[str]]:
-#     result = []
-#     for idx, v  in enumerate(values):
-#         full_date: datetime = v[0]
-#         v[0] = str(full_date.date())
-#         
-#         v.insert(1, str(full_date.time()))
-#
-#     return values
 
 def separate_date_time(values: list[list[datetime]]) -> list[list[str]]:
     result = []
@@ -88,20 +73,6 @@ def separate_date_time(values: list[list[datetime]]) -> list[list[str]]:
 
     return result
 
-# def transform_ion_response(resp: str) -> list[list[str]]:
-#     values = remove_comments(resp)
-#
-#     if is_data_available(values):
-#         values = split_ion_data_in_rows(values)
-#         values = remove_partial_filled_rows(values)
-#         values = remove_empty_rows(values)
-#
-#         if is_data_correct(values):
-#             values = remove_delemiters(values)
-#             values = convert_time(values)
-#             values = separate_date_time(values)
-#
-#     return values
 
 def transform_ion_response(resp: str) -> list[list[str]]:
     values = remove_comments(resp)
@@ -118,5 +89,4 @@ def transform_ion_response(resp: str) -> list[list[str]]:
         values = separate_date_time(values)
 
     return values
-
 
