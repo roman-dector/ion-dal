@@ -73,10 +73,16 @@ class F0f2KMeanDay(Model):
     id = AutoField()
     ursi = TextField()
     date = TextField()
-    sun_k = FloatField()
-    sun_k_err = FloatField()
-    moon_k = FloatField()
-    moon_k_err = FloatField()
+
+    ion_sun_k = FloatField()
+    ion_sun_err = FloatField()
+    ion_moon_k = FloatField()
+    ion_moon_err = FloatField()
+
+    sat_sun_k = FloatField()
+    sat_sun_err = FloatField()
+    sat_moon_k = FloatField()
+    sat_moon_err = FloatField()
 
     class Meta:
         database = db
@@ -204,23 +210,6 @@ def select_hour_avr_for_day(
     ).group_by(fn.strftime('%H', StationData.time))
 
 
-# def select_2h_avr_sat_tec(
-#     ursi: str,
-#     date: str,
-# ):
-#     coords = select_coords_by_ursi(ursi)
-#     return SatelliteTEC.select(
-#         fn.strftime('%H', SatelliteTEC.time).alias('time'),
-#         SatelliteTEC.tec.alias('sat_tec'),
-#         SatelliteTEC.lat.alias('sat_lat'),
-#         SatelliteTEC.lat.alias('sat_long'),
-#     ).where(
-#         SatelliteTEC.date == date
-#     ).where(
-#         ((SatelliteTEC.lat - coords['lat']) < 2.5) & ((SatelliteTEC.long - coords['lat']) < 5)
-#     )
-
-
 def select_2h_avr_for_day_with_sat_tec(
     ursi: str,
     date: str,
@@ -229,37 +218,39 @@ def select_2h_avr_for_day_with_sat_tec(
     coords = select_coords_by_ursi(ursi)
 
     res = cur.execute(f'''with ion_table as (
-             select
-                 strftime('%H', time) as datetime,
-                 ROUND(AVG(f0f2),1) as f0f2,
-                 ROUND(AVG(tec),1) as tec,
-                 ROUND(AVG(b0),1) as b0,
-                 lat,
-                 long
-             from station_data
-             join station on station.ursi = station_data.ursi
-             where station_data.ursi='{ursi}'
-                and date like '{date}'
-                and (accuracy >= {cs_floor} or accuracy = -1)
-             group by datetime
-         ),
-         sat_table as (
-             select
-                 strftime('%H', time) as datetime,
-                 tec as sat_tec,
-                 lat,
-                 long
-             from satellite_tec
-             where date like '{date}'
-                and (ABS(lat - {coords['lat']}) < 1.25)
-                and (ABS(long - IIF({coords['long']} > 180, {coords['long']} - 360, {coords['long']})) < 2.5)
-                and tec != 999.9
-         )
-         select
-             sat_table.datetime as datetime,
-             f0f2, tec, sat_tec, b0
-         from sat_table
-         left join ion_table on ion_table.datetime = sat_table.datetime;'''
+            select
+                strftime('%H', time) as datetime,
+                ROUND(AVG(f0f2),1) as f0f2,
+                ROUND(AVG(tec),1) as tec,
+                ROUND(AVG(b0),1) as b0,
+                lat,
+                long
+            from station_data
+            join station on station.ursi = station_data.ursi
+            where station_data.ursi='{ursi}'
+               and date like '{date}'
+               and (accuracy >= {cs_floor} or accuracy = -1)
+            group by datetime
+        ),
+        sat_table as (
+            select
+                strftime('%H', time) as datetime,
+                tec as sat_tec,
+                lat,
+                long
+            from satellite_tec
+            where date like '{date}'
+               and (ABS(lat - {coords['lat']}) < 1.25)
+               and (ABS(long - IIF({coords['long']} > 180, {coords['long']} - 360, {coords['long']})) < 2.5)
+               and tec != 999.9
+        )
+        select
+            sat_table.datetime as datetime,
+            f0f2, tec, sat_tec, b0
+        from sat_table
+        left join ion_table on ion_table.datetime = sat_table.datetime
+        where f0f2 not null
+        ;'''
     )
     return res.fetchall()
 
@@ -289,6 +280,9 @@ def transform_sat_data(data: ModelSelect) -> tuple[IonData]:
 
 
 if __name__ == '__main__':
-    pprint(select_solar_flux_day_mean('2019-01-01'))
-    print(select_solar_flux_81_mean('2019-01-01'))
+    # pprint(select_solar_flux_day_mean('2019-01-01'))
+    # print(select_solar_flux_81_mean('2019-01-01'))
+    pprint(
+        select_2h_avr_for_day_with_sat_tec('PA836', '2018-01-01')
+    )
 
