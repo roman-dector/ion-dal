@@ -46,7 +46,8 @@ files = []
 
 async def as_main():
     async for y in async_range(18, 19):
-        async for d in async_range(182, 213):
+        # async for d in async_range(9, 10):
+        for d in [9, 22]:
     # for f in files:
     #     y= f[9:11]
     #     d = int(f[4:7])
@@ -92,7 +93,6 @@ async def as_main():
 
                 print(f'DONE! {ionex_file}')
 
-asyncio.run(as_main())
 
 
 
@@ -137,3 +137,6 @@ def main():
                 continue
 
             print(f'DONE! {ionex_file}')
+
+if __name__ == '__main__':
+    asyncio.run(as_main())

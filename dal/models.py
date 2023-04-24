@@ -20,6 +20,9 @@ from peewee import (
 from dal.config import DB_PATH
 
 
+north_summer = [5, 6, 7, 8, 9, 10]
+north_winter = [11, 12, 1, 2, 3, 4]
+
 db = SqliteDatabase(DB_PATH)
 
 connection = con(DB_PATH)
@@ -35,7 +38,7 @@ class IonData(NamedTuple):
 class SatData(NamedTuple):
     datetime: str
     f0f2: float
-    tec: float
+    ion_tec: float
     sat_tec: float
     b0: float
 
@@ -246,13 +249,63 @@ def select_2h_avr_for_day_with_sat_tec(
         )
         select
             sat_table.datetime as datetime,
-            f0f2, tec, sat_tec, b0
+            f0f2, tec as ion_tec, sat_tec, b0
         from sat_table
         left join ion_table on ion_table.datetime = sat_table.datetime
         where f0f2 not null
         ;'''
     )
     return res.fetchall()
+
+def select_f0f2_k_spread_for_month(
+    ursi: str,
+    month: int,
+    year: int,
+):
+    str_month = f'0{month}' if month < 10 else f'{month}'
+    res = cur.execute(f'''
+        select 
+            ROUND(ion_sun_k, 1),
+            ROUND(ion_moon_k, 1),
+            ROUND(sat_sun_k, 1),
+            ROUND(sat_moon_k, 1)
+        from f0f2_k_mean_day
+        where
+            ursi='{ursi}' and
+            date like '{year}-{str_month}%'
+    ''')
+
+    return res.fetchall()
+
+# def select_f0f2_ion_k_spread_for_sum_win(
+#     ursi: str,
+#     year: int,
+# ):
+#     coords = select_coords_by_ursi(ursi)
+
+#     res = cur.execute(f'''with sum as (
+#         select
+#             strftime('%m', date) as month,
+#             ion_sun_k,
+#             ion_sun_err,
+#             ion_moon_k,
+#             ion_moon_err
+#         from f0f2_k_mean_day
+#         where
+#             ursi = {ursi} and
+#             date like '{year}%' and
+#             month in IIF({coords['lat']} > 0, (5, 6, 7, 8, 9, 10), (11, 12, 1, 2, 3, 4))
+#     )
+
+#         select
+#             ion_sun_k,
+#             ion_sun_err,
+#             ion_moon_k,
+#             ion_moon_err
+#         from f0f2_k_mean_day
+#         where ursi = {ursi} and date like '{year}%'
+
+#     ''')
 
 
 def select_day_avr_for_year(ursi: str, year: int) -> ModelSelect:
@@ -266,6 +319,20 @@ def select_day_avr_for_year(ursi: str, year: int) -> ModelSelect:
     ).where(
         fn.strftime('%Y', StationData.date) == str(year)
     ).group_by(StationData.date)
+
+
+def transform_f0f2_k_spread_for_month(data):
+    ion_sun_k = []
+    ion_moon_k = []
+    sat_sun_k = []
+    sat_moon_k = []
+
+    for d in data:
+        ion_sun_k.append(d[0])
+        ion_moon_k.append(d[1])
+        sat_sun_k.append(d[2])
+        sat_moon_k.append(d[3])
+    return (ion_sun_k, ion_moon_k, sat_sun_k, sat_moon_k)
 
 
 def transform_ion_data(data: ModelSelect) -> tuple[IonData]:
@@ -283,6 +350,6 @@ if __name__ == '__main__':
     # pprint(select_solar_flux_day_mean('2019-01-01'))
     # print(select_solar_flux_81_mean('2019-01-01'))
     pprint(
-        select_2h_avr_for_day_with_sat_tec('PA836', '2018-01-01')
+        select_f0f2_k_spread_for_month('PA836', 1, 2018)
     )
 
