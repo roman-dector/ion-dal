@@ -350,6 +350,6 @@ if __name__ == '__main__':
     # pprint(select_solar_flux_day_mean('2019-01-01'))
     # print(select_solar_flux_81_mean('2019-01-01'))
     pprint(
-        select_f0f2_k_spread_for_month('PA836', 1, 2018)
+        transform_f0f2_k_spread_for_month(select_f0f2_k_spread_for_month('PA836', 1, 2018))
     )
 
