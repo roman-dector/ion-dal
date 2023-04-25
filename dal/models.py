@@ -213,6 +213,8 @@ def select_hour_avr_for_day(
     ).group_by(fn.strftime('%H', StationData.time))
 
 
+
+
 def select_2h_avr_for_day_with_sat_tec(
     ursi: str,
     date: str,
@@ -257,6 +259,42 @@ def select_2h_avr_for_day_with_sat_tec(
     )
     return res.fetchall()
 
+
+def select_f0f2_k_mean_for_month(
+    ursi: str,
+    month: int,
+    year: int,
+):
+    str_month = f'0{month}' if month < 10 else f'{month}'
+    
+    res = cur.execute(f'''
+    with len as (
+            select count(*) as len
+            from f0f2_k_mean_day
+            where
+                ursi='PA836' and
+                date like '2018-01%'
+        )
+        select
+            ROUND(AVG(ion_sun_k), 3) as isk,
+            ROUND(AVG(ion_sun_err)/len.len, 3) as ise,
+            ROUND(AVG(ion_moon_k), 3) as imk,
+            ROUND(AVG(ion_moon_err)/len.len, 3) as ime,
+            ROUND(AVG(sat_sun_k), 3) as ssk,
+            ROUND(AVG(sat_sun_err)/len.len, 3) as sse,
+            ROUND(AVG(sat_moon_k), 3) as smk,
+            ROUND(AVG(sat_moon_err)/len.len, 3) as sme,
+            strftime('%Y-%m', date) as yearmonth
+        from f0f2_k_mean_day, len
+        where
+            ursi='{ursi}' and
+            date like '{year}-{str_month}%'
+            group by yearmonth;
+    ''')
+
+    return res.fetchall()
+
+
 def select_f0f2_k_spread_for_month(
     ursi: str,
     month: int,
@@ -277,35 +315,48 @@ def select_f0f2_k_spread_for_month(
 
     return res.fetchall()
 
-# def select_f0f2_ion_k_spread_for_sum_win(
-#     ursi: str,
-#     year: int,
-# ):
-#     coords = select_coords_by_ursi(ursi)
+def select_f0f2_ion_k_spread_for_sum_win(
+    ursi: str,
+    year: int,
+):
+    coords = select_coords_by_ursi(ursi)
+    noth_sum = north_summer if coords['lat'] > 0 else north_winter
+    noth_win = north_winter if coords['lat'] > 0 else north_summer
 
-#     res = cur.execute(f'''with sum as (
-#         select
-#             strftime('%m', date) as month,
-#             ion_sun_k,
-#             ion_sun_err,
-#             ion_moon_k,
-#             ion_moon_err
-#         from f0f2_k_mean_day
-#         where
-#             ursi = {ursi} and
-#             date like '{year}%' and
-#             month in IIF({coords['lat']} > 0, (5, 6, 7, 8, 9, 10), (11, 12, 1, 2, 3, 4))
-#     )
+    res = cur.execute(f'''
+    with
+        sum as (
+            select
+                strftime('%m', date) as month,
+                ion_sun_k as sum_sun_k,
+                ion_moon_k as sum_moon_k
+            from f0f2_k_mean_day
+            where
+                ursi = '{ursi}' and
+                date like '{year}%' and
+                month in ({noth_sum})
+        ),
+        win as (
+            select
+                strftime('%m', date) as month,
+                ion_sun_k as win_sun_k,
+                ion_moon_k as win_moon_k
+            from f0f2_k_mean_day
+            where
+                ursi = '{ursi}' and
+                date like '{year}%' and
+                month in ({noth_win})
+        )
+        select
+            sum_sun_k,
+            sum_moon_k,
+            win_sun_k,
+            win_moon_k
+        from sum, win
+    ''')
+    return res.fetchall()
 
-#         select
-#             ion_sun_k,
-#             ion_sun_err,
-#             ion_moon_k,
-#             ion_moon_err
-#         from f0f2_k_mean_day
-#         where ursi = {ursi} and date like '{year}%'
 
-#     ''')
 
 
 def select_day_avr_for_year(ursi: str, year: int) -> ModelSelect:
@@ -350,6 +401,6 @@ if __name__ == '__main__':
     # pprint(select_solar_flux_day_mean('2019-01-01'))
     # print(select_solar_flux_81_mean('2019-01-01'))
     pprint(
-        transform_f0f2_k_spread_for_month(select_f0f2_k_spread_for_month('PA836', 1, 2018))
+        select_f0f2_ion_k_spread_for_sum_win('PA836', 2018)
     )
 
