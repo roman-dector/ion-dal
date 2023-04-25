@@ -315,7 +315,28 @@ def select_f0f2_k_spread_for_month(
 
     return res.fetchall()
 
-def select_f0f2_ion_k_spread_for_sum_win(
+
+def select_f0f2_ion_k_spread_for_win(
+    ursi: str,
+    year: int,
+):
+    coords = select_coords_by_ursi(ursi)
+    noth_sum = north_summer if coords['lat'] > 0 else north_winter
+    noth_win = north_winter if coords['lat'] > 0 else north_summer
+
+    res = cur.execute(f'''
+            select
+                ion_sun_k as win_sun_k,
+                ion_moon_k as win_moon_k,
+            from f0f2_k_mean_day
+            where
+                ursi = '{ursi}' and
+                date glob '{year}%' and
+    ''')
+    return res.fetchall()
+
+
+def select_f0f2_ion_k_spread_for_sum(
     ursi: str,
     year: int,
 ):
@@ -334,7 +355,7 @@ def select_f0f2_ion_k_spread_for_sum_win(
             where
                 ursi = '{ursi}' and
                 date like '{year}%' and
-                month in ({noth_sum})
+                month in ({', '.join([str(i) for i in noth_sum])})
         ),
         win as (
             select
@@ -345,14 +366,15 @@ def select_f0f2_ion_k_spread_for_sum_win(
             where
                 ursi = '{ursi}' and
                 date like '{year}%' and
-                month in ({noth_win})
+                month in ({', '.join([str(i) for i in noth_win])})
         )
         select
             sum_sun_k,
             sum_moon_k,
             win_sun_k,
             win_moon_k
-        from sum, win
+        from sum
+        join win
     ''')
     return res.fetchall()
 
@@ -401,6 +423,6 @@ if __name__ == '__main__':
     # pprint(select_solar_flux_day_mean('2019-01-01'))
     # print(select_solar_flux_81_mean('2019-01-01'))
     pprint(
-        select_f0f2_ion_k_spread_for_sum_win('PA836', 2018)
+        select_f0f2_ion_k_spread_for_win('PA836', 2018)
     )
 

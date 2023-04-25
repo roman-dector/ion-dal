@@ -1,4 +1,3 @@
-handlers.py
 *.txt
 .netrc
 sat_tec.py
