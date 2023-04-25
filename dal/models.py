@@ -143,6 +143,30 @@ two_hour_time_groups = {
     '23': 22,
 }
 
+def transform_f0f2_k_spread_for_month(data):
+    ion_sun_k = []
+    ion_moon_k = []
+    sat_sun_k = []
+    sat_moon_k = []
+
+    for d in data:
+        ion_sun_k.append(d[0])
+        ion_moon_k.append(d[1])
+        sat_sun_k.append(d[2])
+        sat_moon_k.append(d[3])
+    return (ion_sun_k, ion_moon_k, sat_sun_k, sat_moon_k)
+
+
+def transform_ion_data(data: ModelSelect) -> tuple[IonData]:
+    return tuple([
+        IonData(d.datetime, d.f0f2, d.tec, d.b0) for d in data
+    ])
+
+def transform_sat_data(data: ModelSelect) -> tuple[IonData]:
+    return tuple([
+        SatData(d[0], d[1], d[2], d[3], d[4]) for d in data
+    ])
+
 
 def select_solar_flux_day_mean(date: str):
     flux = SolarFlux.select(
@@ -211,8 +235,6 @@ def select_hour_avr_for_day(
         fn.AVG(StationData.tec).alias('tec'),
         fn.AVG(StationData.b0).alias('b0'),
     ).group_by(fn.strftime('%H', StationData.time))
-
-
 
 
 def select_2h_avr_for_day_with_sat_tec(
@@ -379,51 +401,56 @@ def select_f0f2_k_spread_for_year(
 
     return res.fetchall()
 
+def select_f0f2_sat_tec(
+    ursi: str,
+    date: str,
+    cs_floor: int=70,
+):
+    coords = select_coords_by_ursi(ursi)
+
+    res = cur.execute(f'''
+        with
+            ion_table as (
+                select
+                    strftime('%H', time) as hour,
+                    ROUND(AVG(f0f2),1) as f0f2
+                from station_data
+                where
+                    ursi='{ursi}' and
+                    date like '{date}' and
+                    (accuracy >= {cs_floor} or accuracy = -1)
+                group by hour
+            ),
+            sat_table as (
+                select
+                    strftime('%H', time) as hour,
+                    tec as sat_tec
+                from satellite_tec
+                where
+                    date like '{date}' and
+                    (ABS(lat - {coords['lat']}) < 1.25) and
+                    (ABS(long - IIF({coords['long']} > 180, {coords['long']} - 360, {coords['long']})) < 2.5) and
+                    tec != 999.9
+            )
+
+        select
+            sat_table.hour as hour,
+            f0f2,
+            sat_tec
+        from sat_table
+        left join ion_table on ion_table.hour = sat_table.hour
+        where f0f2 not null
+        ;'''
+    )
+    return res.fetchall()
 
 
-
-def select_day_avr_for_year(ursi: str, year: int) -> ModelSelect:
-    return StationData.select(
-        StationData.date.alias('datetime'),
-        fn.AVG(StationData.f0f2).alias('f0f2'),
-        fn.AVG(StationData.tec).alias('tec'),
-        fn.AVG(StationData.b0).alias('b0'),
-    ).where(
-        StationData.ursi == ursi
-    ).where(
-        fn.strftime('%Y', StationData.date) == str(year)
-    ).group_by(StationData.date)
-
-
-def transform_f0f2_k_spread_for_month(data):
-    ion_sun_k = []
-    ion_moon_k = []
-    sat_sun_k = []
-    sat_moon_k = []
-
-    for d in data:
-        ion_sun_k.append(d[0])
-        ion_moon_k.append(d[1])
-        sat_sun_k.append(d[2])
-        sat_moon_k.append(d[3])
-    return (ion_sun_k, ion_moon_k, sat_sun_k, sat_moon_k)
-
-
-def transform_ion_data(data: ModelSelect) -> tuple[IonData]:
-    return tuple([
-        IonData(d.datetime, d.f0f2, d.tec, d.b0) for d in data
-    ])
-
-def transform_sat_data(data: ModelSelect) -> tuple[IonData]:
-    return tuple([
-        SatData(d[0], d[1], d[2], d[3], d[4]) for d in data
-    ])
 
 
 if __name__ == '__main__':
     # pprint(select_solar_flux_day_mean('2019-01-01'))
     # print(select_solar_flux_81_mean('2019-01-01'))
     pprint(
-        select_f0f2_k_spread_for_win('PA836', 2018)
+        select_f0f2_sat_tec('PA836', '2018-01-01')
     )
 
