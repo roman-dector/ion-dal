@@ -445,6 +445,48 @@ def select_f0f2_sat_tec(
     return res.fetchall()
 
 
+def select_ion_tec_sat_tec(
+    ursi: str,
+    date: str,
+    cs_floor: int=70,
+):
+    coords = select_coords_by_ursi(ursi)
+
+    res = cur.execute(f'''
+        with
+            ion_table as (
+                select
+                    strftime('%H', time) as hour,
+                    ROUND(AVG(tec),1) as ion_tec
+                from station_data
+                where
+                    ursi='{ursi}' and
+                    date like '{date}' and
+                    (accuracy >= {cs_floor} or accuracy = -1)
+                group by hour
+            ),
+            sat_table as (
+                select
+                    strftime('%H', time) as hour,
+                    tec as sat_tec
+                from satellite_tec
+                where
+                    date like '{date}' and
+                    (ABS(lat - {coords['lat']}) < 1.25) and
+                    (ABS(long - IIF({coords['long']} > 180, {coords['long']} - 360, {coords['long']})) < 2.5) and
+                    tec != 999.9
+            )
+
+        select
+            sat_table.hour as hour,
+            ion_tec,
+            sat_tec
+        from sat_table
+        left join ion_table on ion_table.hour = sat_table.hour
+        where ion_tec not null
+        ;'''
+    )
+    return res.fetchall()
 
 
 if __name__ == '__main__':
