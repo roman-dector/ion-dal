@@ -327,11 +327,11 @@ def select_f0f2_ion_k_spread_for_win(
     res = cur.execute(f'''
             select
                 ion_sun_k as win_sun_k,
-                ion_moon_k as win_moon_k,
+                ion_moon_k as win_moon_k
             from f0f2_k_mean_day
             where
                 ursi = '{ursi}' and
-                date glob '{year}%' and
+                date glob '{year}-0{[11, 12, 1, 2, 3, 4]}*'
     ''')
     return res.fetchall()
 
