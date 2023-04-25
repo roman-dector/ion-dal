@@ -316,66 +316,67 @@ def select_f0f2_k_spread_for_month(
     return res.fetchall()
 
 
-def select_f0f2_ion_k_spread_for_win(
+def select_f0f2_k_spread_for_sum(
     ursi: str,
     year: int,
 ):
     coords = select_coords_by_ursi(ursi)
-    noth_sum = north_summer if coords['lat'] > 0 else north_winter
-    noth_win = north_winter if coords['lat'] > 0 else north_summer
-
     res = cur.execute(f'''
             select
-                ion_sun_k as win_sun_k,
-                ion_moon_k as win_moon_k
+                ion_sun_k as sum_ion_sun_k,
+                ion_moon_k as sum_ion_moon_k,
+                sat_sun_k as sum_sat_sun_k,
+                sat_moon_k as sum_sat_moon_k
             from f0f2_k_mean_day
             where
                 ursi = '{ursi}' and
-                date glob '{year}-0{[11, 12, 1, 2, 3, 4]}*'
+                (
+                    date glob IIF({coords['lat']} > 0, '{year}-0[5, 6, 7, 8, 9]*', '{year}-0[1, 2, 3, 4]*') or
+                    date glob IIF({coords['lat']} > 0, '{year}-10*', '{year}-[11, 12]*')
+                )
     ''')
     return res.fetchall()
 
 
-def select_f0f2_ion_k_spread_for_sum(
+def select_f0f2_k_spread_for_win(
     ursi: str,
     year: int,
 ):
     coords = select_coords_by_ursi(ursi)
-    noth_sum = north_summer if coords['lat'] > 0 else north_winter
-    noth_win = north_winter if coords['lat'] > 0 else north_summer
-
     res = cur.execute(f'''
-    with
-        sum as (
             select
-                strftime('%m', date) as month,
-                ion_sun_k as sum_sun_k,
-                ion_moon_k as sum_moon_k
+                ion_sun_k as win_ion_sun_k,
+                ion_moon_k as win_ion_moon_k,
+                sat_sun_k as win_sat_sun_k,
+                sat_moon_k as win_sat_moon_k
             from f0f2_k_mean_day
             where
                 ursi = '{ursi}' and
-                date like '{year}%' and
-                month in ({', '.join([str(i) for i in noth_sum])})
-        ),
-        win as (
-            select
-                strftime('%m', date) as month,
-                ion_sun_k as win_sun_k,
-                ion_moon_k as win_moon_k
-            from f0f2_k_mean_day
-            where
-                ursi = '{ursi}' and
-                date like '{year}%' and
-                month in ({', '.join([str(i) for i in noth_win])})
-        )
-        select
-            sum_sun_k,
-            sum_moon_k,
-            win_sun_k,
-            win_moon_k
-        from sum
-        join win
+                (
+                    date glob IIF({coords['lat']} > 0, '{year}-0[1, 2, 3, 4]*', '{year}-0[5, 6, 7, 8, 9]*') or
+                    date glob IIF({coords['lat']} > 0, '{year}-[11, 12]*', '{year}-10*')
+                )
     ''')
+
+    return res.fetchall()
+
+
+def select_f0f2_k_spread_for_year(
+    ursi: str,
+    year: int,
+):
+    res = cur.execute(f'''
+            select
+                ion_sun_k,
+                ion_moon_k,
+                sat_sun_k,
+                sat_moon_k
+            from f0f2_k_mean_day
+            where
+                ursi = '{ursi}' and
+                date like '{year}%'
+    ''')
+
     return res.fetchall()
 
 
@@ -423,6 +424,6 @@ if __name__ == '__main__':
     # pprint(select_solar_flux_day_mean('2019-01-01'))
     # print(select_solar_flux_81_mean('2019-01-01'))
     pprint(
-        select_f0f2_ion_k_spread_for_win('PA836', 2018)
+        select_f0f2_k_spread_for_win('PA836', 2018)
     )
 
