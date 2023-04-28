@@ -85,7 +85,7 @@ class IonSatADRMeanDay(Model):
 
     class Meta:
         database = db
-        table_name= 'f0f2_k_mean_day'
+        table_name= 'ion_sat_adr_mean_day'
 
 
 class F0f2KMeanDay(Model):
