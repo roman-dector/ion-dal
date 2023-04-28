@@ -72,6 +72,22 @@ class StationData(Model):
         table_name= 'station_data'
 
 
+class IonSatADRMeanDay(Model):
+    id = AutoField()
+    ursi = TextField()
+    date = TextField()
+
+    a = FloatField()
+    a_err = FloatField()
+    d = FloatField()
+    d_err = FloatField()
+    r = FloatField()
+
+    class Meta:
+        database = db
+        table_name= 'f0f2_k_mean_day'
+
+
 class F0f2KMeanDay(Model):
     id = AutoField()
     ursi = TextField()
