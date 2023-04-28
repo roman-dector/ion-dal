@@ -2,6 +2,8 @@ from dal.models import (
     select_f0f2_k_spread_for_month,
     transform_f0f2_k_spread_for_month,
     select_f0f2_k_spread_for_sum,
+    transform_b0_ab_spread_for_month,
+    select_b0_ab_spread_for_sum,
     select_f0f2_k_spread_for_win,
 
     select_f0f2_k_mean_for_month,
@@ -33,6 +35,16 @@ def get_f0f2_k_spread_for_month(
 ):
     return transform_f0f2_k_spread_for_month(
         select_f0f2_k_spread_for_month(ursi, month, year)
+    )
+
+
+def get_f0f2_k_spread_for_month(
+    ursi: str,
+    month: int,
+    year: int,
+):
+    return transform_b0_ab_spread_for_month(
+        select_b0_ab_spread_for_month(ursi, month, year)
     )
 
 

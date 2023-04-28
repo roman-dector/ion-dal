@@ -46,7 +46,7 @@ files = []
 
 async def as_main():
     for y in range(18, 19):
-        for d in range(86, 91):
+        async for d in async_range(299, 366):
     # for f in files:
     #     y= f[9:11]
     #     d = int(f[4:7])
@@ -85,7 +85,6 @@ async def as_main():
                                     await db.commit()
 
                 except Exception as ex:
-                    print(ex)
                     async with aiofiles.open('bad_ionex.txt', '+a') as f:
                         await f.write(f'{ionex_file}\n')
                     continue

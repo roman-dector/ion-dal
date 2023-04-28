@@ -92,6 +92,26 @@ class F0f2KMeanDay(Model):
         table_name= 'f0f2_k_mean_day'
 
 
+class B0ABMeanDay(Model):
+    id = AutoField()
+    ursi = TextField()
+    date = TextField()
+
+    sun_a = FloatField()
+    sun_a_err = FloatField()
+    moon_a = FloatField()
+    moon_a_err = FloatField()
+
+    sun_b = FloatField()
+    sun_b_err = FloatField()
+    moon_b = FloatField()
+    moon_b_err = FloatField()
+
+    class Meta:
+        database = db
+        table_name= 'b0_ab_mean_day'
+
+
 class SatelliteTEC(Model):
     id = AutoField()
     date = TextField()
@@ -143,6 +163,7 @@ two_hour_time_groups = {
     '23': 22,
 }
 
+
 def transform_f0f2_k_spread_for_month(data):
     ion_sun_k = []
     ion_moon_k = []
@@ -161,6 +182,7 @@ def transform_ion_data(data: ModelSelect) -> tuple[IonData]:
     return tuple([
         IonData(d.datetime, d.f0f2, d.tec, d.b0) for d in data
     ])
+
 
 def transform_sat_data(data: ModelSelect) -> tuple[IonData]:
     return tuple([
@@ -279,6 +301,37 @@ def select_2h_avr_for_day_with_sat_tec(
         where f0f2 not null
         ;'''
     )
+    return res.fetchall()
+
+
+def select_b0_ab_mean_for_month(
+    ursi: str,
+    month: int,
+    year: int,
+):
+    str_month = f'0{month}' if month < 10 else f'{month}'
+
+    res = cur.execute(f'''
+    with len as (
+            select count(*) as len
+            from f0f2_k_mean_day
+            where
+                ursi='PA836' and
+                date like '2018-01%'
+        )
+        select
+            ROUND(AVG(sat_sun_k), 3) as ssk,
+            ROUND(AVG(sat_sun_err)/len.len, 3) as sse,
+            ROUND(AVG(sat_moon_k), 3) as smk,
+            ROUND(AVG(sat_moon_err)/len.len, 3) as sme,
+            strftime('%Y-%m', date) as yearmonth
+        from b0_ab_mean_day, len
+        where
+            ursi='{ursi}' and
+            date like '{year}-{str_month}%'
+            group by yearmonth;
+    ''')
+
     return res.fetchall()
 
 
