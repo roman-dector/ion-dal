@@ -470,6 +470,7 @@ def select_f0f2_k_spread_for_year(
 
     return res.fetchall()
 
+
 def select_f0f2_sat_tec(
     ursi: str,
     date: str,
@@ -553,6 +554,22 @@ def select_ion_tec_sat_tec(
         from sat_table
         left join ion_table on ion_table.hour = sat_table.hour
         where ion_tec not null
+        ;'''
+    )
+    return res.fetchall()
+
+
+def select_adr_spread_for_month(
+    ursi: str,
+    month: int,
+    year: int,
+):
+    str_month = f'0{month}' if month < 10 else str(month)
+
+    res = cur.execute(f'''
+        select a, d, r
+        from ion_sat_adr_mean_day
+        where ursi = '{ursi}' and date like '{year}-{str_month}%'
         ;'''
     )
     return res.fetchall()
