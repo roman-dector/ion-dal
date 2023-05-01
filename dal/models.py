@@ -560,6 +560,8 @@ def select_ion_tec_sat_tec(
     return res.fetchall()
 
 
+
+
 def select_adr_spread_for_month(
     ursi: str,
     month: int,
@@ -618,12 +620,24 @@ def select_adr_spread_for_year(
     ursi: str,
     year: int,
 ):
-    coords = select_coords_by_ursi(ursi)
-
     res = cur.execute(f'''
         select a, d, r
         from ion_sat_adr_mean_day
         where ursi = '{ursi}' and date like '{year}%'
+        ;'''
+    )
+    return res.fetchall()
+
+
+def select_ad_mean_for_year(
+    ursi: str,
+    year: int,
+):
+    res = cur.execute(f'''
+        select AVG(a), AVG(d), strftime('%Y', date) as year
+        from ion_sat_adr_mean_day
+        where ursi = '{ursi}' and year like '{year}'
+        group by year
         ;'''
     )
     return res.fetchall()
