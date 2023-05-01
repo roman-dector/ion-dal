@@ -614,6 +614,21 @@ def select_adr_spread_for_win(
     return res.fetchall()
 
 
+def select_adr_spread_for_year(
+    ursi: str,
+    year: int,
+):
+    coords = select_coords_by_ursi(ursi)
+
+    res = cur.execute(f'''
+        select a, d, r
+        from ion_sat_adr_mean_day
+        where ursi = '{ursi}' and date like '{year}%'
+        ;'''
+    )
+    return res.fetchall()
+
+
 if __name__ == '__main__':
     # pprint(select_solar_flux_day_mean('2019-01-01'))
     # print(select_solar_flux_81_mean('2019-01-01'))

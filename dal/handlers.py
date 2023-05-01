@@ -1,15 +1,17 @@
 from dal.models import (
-    select_f0f2_k_spread_for_month,
+    select_f0f2_k_mean_for_month,
     transform_f0f2_k_spread_for_month,
+    select_f0f2_k_spread_for_month,
     select_f0f2_k_spread_for_sum,
-    # transform_b0_ab_spread_for_month,
-    # select_b0_ab_spread_for_sum,
     select_f0f2_k_spread_for_win,
 
-    select_f0f2_k_mean_for_month,
+    # transform_b0_ab_spread_for_month,
+    # select_b0_ab_spread_for_sum,
+
     select_adr_spread_for_month,
     select_adr_spread_for_sum,
     select_adr_spread_for_win,
+    select_adr_spread_for_year,
 )
 
 
@@ -37,6 +39,18 @@ def get_adr_spread_for_sum_win(
     a_win, d_win, r_win = [s[0] for s in win], [s[1] for s in win], [s[2] for s in win]
 
     return ((a_sun, d_sun, r_sun), (a_win, d_win, r_win))
+
+
+def get_adr_spread_for_year(
+    ursi: str,
+    year: int,
+):
+    spread = select_adr_spread_for_year(ursi, year)
+    a = [s[0] for s in spread]
+    d = [s[1] for s in spread]
+    r = [s[2] for s in spread]
+
+    return a, d, r
 
 
 def calc_f0f2_k_mean_for_month(
