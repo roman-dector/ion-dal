@@ -7,7 +7,27 @@ from dal.models import (
     select_f0f2_k_spread_for_win,
 
     select_f0f2_k_mean_for_month,
+    select_adr_spread_for_month,
 )
+
+
+def get_adr_spread_for_month(
+    ursi: str,
+    month: int,
+    year: int,
+):
+    a = []
+    d = []
+    r = []
+    spread = select_adr_spread_for_month(ursi, month, year)
+    for s in spread:
+        a.append(s[0])
+        d.append(s[1])
+        r.append(s[2])
+
+    return a, d, r
+
+
 
 
 def calc_f0f2_k_mean_for_month(

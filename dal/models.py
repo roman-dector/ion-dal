@@ -35,6 +35,7 @@ class IonData(NamedTuple):
     tec: float
     b0: float
 
+
 class SatData(NamedTuple):
     datetime: str
     f0f2: float
@@ -580,6 +581,5 @@ if __name__ == '__main__':
     # print(select_solar_flux_81_mean('2019-01-01'))
     pprint(
         # select_f0f2_sat_tec('PA836', '2018-01-01')
-        select_ion_tec_sat_tec_for_month('PA836', 1, 2018)
     )
 
