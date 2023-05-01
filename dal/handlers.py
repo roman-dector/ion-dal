@@ -8,6 +8,8 @@ from dal.models import (
 
     select_f0f2_k_mean_for_month,
     select_adr_spread_for_month,
+    select_adr_spread_for_sum,
+    select_adr_spread_for_win,
 )
 
 
@@ -16,18 +18,25 @@ def get_adr_spread_for_month(
     month: int,
     year: int,
 ):
-    a = []
-    d = []
-    r = []
     spread = select_adr_spread_for_month(ursi, month, year)
-    for s in spread:
-        a.append(s[0])
-        d.append(s[1])
-        r.append(s[2])
+    a = [s[0] for s in spread]
+    d = [s[1] for s in spread]
+    r = [s[2] for s in spread]
 
     return a, d, r
 
 
+def get_adr_spread_for_sum_win(
+    ursi: str,
+    year: int,
+):
+    sum = select_adr_spread_for_sum(ursi, year)
+    win = select_adr_spread_for_sum(ursi, year)
+
+    a_sun, d_sun, r_sun = [s[0] for s in sum], [s[1] for s in sum], [s[2] for s in sum]
+    a_win, d_win, r_win = [s[1] for s in win], [s[1] for s in win], [s[2] for s in win]
+
+    return ((a_sun, d_sun, r_sun), (a_win, d_win, r_win))
 
 
 def calc_f0f2_k_mean_for_month(

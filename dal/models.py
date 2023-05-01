@@ -576,6 +576,44 @@ def select_adr_spread_for_month(
     return res.fetchall()
 
 
+def select_adr_spread_for_sum(
+    ursi: str,
+    year: int,
+):
+    coords = select_coords_by_ursi(ursi)
+
+    res = cur.execute(f'''
+        select a, d, r
+        from ion_sat_adr_mean_day
+        where ursi = '{ursi}' and
+            (
+                date glob IIF({coords['lat']} > 0, '{year}-0[5, 6, 7, 8, 9]*', '{year}-0[1, 2, 3, 4]*') or
+                date glob IIF({coords['lat']} > 0, '{year}-10*', '{year}-[11, 12]*')
+            )
+        ;'''
+    )
+    return res.fetchall()
+
+
+def select_adr_spread_for_win(
+    ursi: str,
+    year: int,
+):
+    coords = select_coords_by_ursi(ursi)
+
+    res = cur.execute(f'''
+        select a, d, r
+        from ion_sat_adr_mean_day
+        where ursi = '{ursi}' and
+            (
+                date glob IIF({coords['lat']} > 0, '{year}-0[1, 2, 3, 4]*', '{year}-0[5, 6, 7, 8, 9]*') or
+                date glob IIF({coords['lat']} > 0, '{year}-[11, 12]*', '{year}-10*')
+            )
+        ;'''
+    )
+    return res.fetchall()
+
+
 if __name__ == '__main__':
     # pprint(select_solar_flux_day_mean('2019-01-01'))
     # print(select_solar_flux_81_mean('2019-01-01'))
