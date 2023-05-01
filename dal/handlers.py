@@ -31,7 +31,7 @@ def get_adr_spread_for_sum_win(
     year: int,
 ):
     sum = select_adr_spread_for_sum(ursi, year)
-    win = select_adr_spread_for_sum(ursi, year)
+    win = select_adr_spread_for_win(ursi, year)
 
     a_sun, d_sun, r_sun = [s[0] for s in sum], [s[1] for s in sum], [s[2] for s in sum]
     a_win, d_win, r_win = [s[1] for s in win], [s[1] for s in win], [s[2] for s in win]
