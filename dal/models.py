@@ -118,6 +118,9 @@ class F0f2KMeanDay(Model):
     sat_moon_k = FloatField()
     sat_moon_err = FloatField()
 
+    jmodel_sun_k = FloatField()
+    jmodel_moon_k = FloatField()
+
     class Meta:
         database = db
         table_name= 'f0f2_k_mean_day'
