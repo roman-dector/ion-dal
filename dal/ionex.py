@@ -45,16 +45,12 @@ files = []
 
 
 async def as_main():
-    for y in range(18, 19):
-        async for d in async_range(299, 366):
-    # for f in files:
-    #     y= f[9:11]
-    #     d = int(f[4:7])
-
+    for y in [19]:
+        async for d in async_range(1, 366):
             day = f'00{d}' if d < 10 else (f'0{d}' if d < 100 else f'{d}')
             ionex_file = f'esag{day}0.{y}i'
 
-            with open(IONEX_FILES_PATH + f'/{ionex_file}') as file:
+            with open(IONEX_FILES_PATH + f'/{y}' + f'/{ionex_file}') as file:
                 try:
                     inx = ionex.reader(file)
                 except Exception as ex:
@@ -94,47 +90,47 @@ async def as_main():
 
 
 
-def main():
-    # for y in range(18, 19):
-    #     for d in range(1, 2):
-    for f in files:
-        y= f[9:11]
-        d = int(f[4:7])
+# def main():
+#     # for y in range(18, 19):
+#     #     for d in range(1, 2):
+#     for f in files:
+#         y= f[9:11]
+#         d = int(f[4:7])
 
-        day = f'00{d}' if d < 10 else (f'0{d}' if d < 100 else f'{d}')
-        ionex_file = f'esag{day}0.{y}i'
+#         day = f'00{d}' if d < 10 else (f'0{d}' if d < 100 else f'{d}')
+#         ionex_file = f'esag{day}0.{y}i'
 
-        with open(IONEX_FILES_PATH + f'/{ionex_file}') as file:
-            try:
-                inx = ionex.reader(file)
-            except:
-                with open('bad_ionex_file.txt', '+a') as f:
-                    f.write(f'{ionex_file}\n')
-                continue
+#         with open(IONEX_FILES_PATH + f'/{ionex_file}') as file:
+#             try:
+#                 inx = ionex.reader(file)
+#             except:
+#                 with open('bad_ionex_file.txt', '+a') as f:
+#                     f.write(f'{ionex_file}\n')
+#                 continue
 
-            try:
-                for ionex_map in inx:
-                    epoch = ionex_map.epoch
-                    day_of_year = datetime.strptime(epoch, '%Y-%m-%d').timetuple().tm_yday
-                    if day_of_year != d:
-                        continue
+#             try:
+#                 for ionex_map in inx:
+#                     epoch = ionex_map.epoch
+#                     day_of_year = datetime.strptime(epoch, '%Y-%m-%d').timetuple().tm_yday
+#                     if day_of_year != d:
+#                         continue
 
-                    for idx1, slice in enumerate(list(split_to_slices(ionex_map.tec, slice_len))):
-                        for idx2, v in enumerate([round(i, 1) for i in slice]):
-                            record = SatelliteTEC(
-                                date=epoch.strftime('%Y-%m-%d'),
-                                time=epoch.strftime('%H:%M:%S'),
-                                tec=v,
-                                lat=lat_start - idx1 * lat_step,
-                                long=long_start + idx2 * long_step,
-                            )
-                            record.save()
-            except:
-                with open('bad_ionex.txt', '+a') as f:
-                    f.write(f'{ionex_file}\n')
-                continue
+#                     for idx1, slice in enumerate(list(split_to_slices(ionex_map.tec, slice_len))):
+#                         for idx2, v in enumerate([round(i, 1) for i in slice]):
+#                             record = SatelliteTEC(
+#                                 date=epoch.strftime('%Y-%m-%d'),
+#                                 time=epoch.strftime('%H:%M:%S'),
+#                                 tec=v,
+#                                 lat=lat_start - idx1 * lat_step,
+#                                 long=long_start + idx2 * long_step,
+#                             )
+#                             record.save()
+#             except:
+#                 with open('bad_ionex.txt', '+a') as f:
+#                     f.write(f'{ionex_file}\n')
+#                 continue
 
-            print(f'DONE! {ionex_file}')
+#             print(f'DONE! {ionex_file}')
 
 if __name__ == '__main__':
     asyncio.run(as_main())

@@ -72,6 +72,20 @@ class StationData(Model):
         database = db
         table_name= 'station_data'
 
+class AccuracyJmodel(Model):
+    id = AutoField()
+    ursi = TextField()
+    date = TextField()
+
+    gap_f0f2_sun = FloatField()
+    gap_f0f2_moon = FloatField()
+    gap_k_sun = FloatField()
+    gap_k_moon = FloatField()
+
+    class Meta:
+        database = db
+        table_name= 'accuracy_jmodel'
+
 
 class IonSatADRMeanDay(Model):
     id = AutoField()
@@ -516,6 +530,8 @@ def select_f0f2_sat_tec(
     return res.fetchall()
 
 
+
+
 def select_ion_tec_sat_tec(
     ursi: str,
     date: str,
@@ -558,8 +574,6 @@ def select_ion_tec_sat_tec(
         ;'''
     )
     return res.fetchall()
-
-
 
 
 def select_adr_spread_for_month(
@@ -647,6 +661,6 @@ if __name__ == '__main__':
     # pprint(select_solar_flux_day_mean('2019-01-01'))
     # print(select_solar_flux_81_mean('2019-01-01'))
     pprint(
-        # select_f0f2_sat_tec('PA836', '2018-01-01')
+        select_ad_mean_for_year('PA836', 2018)
     )
 
