@@ -668,7 +668,7 @@ def select_gap_spread_for_month(ursi, month, year):
             gap_f0f2_sun,
             gap_f0f2_moon,
             gap_k_sun,
-            gap_k_moon,
+            gap_k_moon
         from accuracy_jmodel
         where ursi = '{ursi}' and date like '{year}-{str_month}%'
         ;'''
