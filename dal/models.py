@@ -660,10 +660,22 @@ def select_ad_mean_for_year(
     return res.fetchall()
 
 
-if __name__ == '__main__':
-    # pprint(select_solar_flux_day_mean('2019-01-01'))
-    # print(select_solar_flux_81_mean('2019-01-01'))
-    pprint(
-        select_ad_mean_for_year('PA836', 2018)
+def select_gap_spread_for_month(ursi, month, year):
+    str_month = f'0{month}' if month < 10 else str(month)
+
+    res = cur.execute(f'''
+        select 
+            gap_f0f2_sun,
+            gap_f0f2_moon,
+            gap_k_sun,
+            gap_k_moon,
+        from accuracy_jmodel
+        where ursi = '{ursi}' and date like '{year}-{str_month}%'
+        ;'''
     )
+    return res.fetchall()
+
+
+if __name__ == '__main__':
+    F0f2KMeanDay.update({F0f2KMeanDay.jmodel_sun_k}).where((F0f2KMeanDay.ursi == 'PA836') & (F0f2KMeanDay.date == '2018-01-01'))
 
