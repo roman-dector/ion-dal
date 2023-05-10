@@ -14,11 +14,50 @@ from dal.models import (
     select_adr_spread_for_year,
 
     select_gap_spread_for_month,
+    select_gap_spread_for_sum,
+    select_gap_spread_for_win,
+    select_gap_spread_for_year,
 )
 
 
 def get_gap_spread_for_month(ursi, month, year):
     spread = select_gap_spread_for_month(ursi, month, year)
+    gap_f0f2_sun = [s[0] for s in spread]
+    gap_f0f2_moon = [s[1] for s in spread]
+    gap_k_sun = [s[2] for s in spread]
+    gap_k_moon = [s[3] for s in spread]
+
+    return gap_f0f2_sun, gap_f0f2_moon, gap_k_sun, gap_k_moon
+
+
+def get_gap_spread_for_sum_win(
+    ursi: str,
+    year: int,
+):
+    sum = select_gap_spread_for_sum(ursi, year)
+    win = select_gap_spread_for_win(ursi, year)
+
+    sum_gap_f0f2_sun = [s[0] for s in sum]
+    sum_gap_f0f2_moon = [s[1] for s in sum]
+    sum_gap_k_sun = [s[2] for s in sum]
+    sum_gap_k_moon = [s[3] for s in sum]
+
+    win_gap_f0f2_sun = [s[0] for s in win]
+    win_gap_f0f2_moon = [s[1] for s in win]
+    win_gap_k_sun = [s[2] for s in win]
+    win_gap_k_moon = [s[3] for s in win]
+
+    return {
+        'sun': (sum_gap_f0f2_sun, sum_gap_f0f2_moon, sum_gap_k_sun, sum_gap_k_moon),
+        'moon': (win_gap_f0f2_sun, win_gap_f0f2_moon, win_gap_k_sun, win_gap_k_moon),
+    }
+
+
+def get_gap_spread_for_year(
+    ursi: str,
+    year: int,
+):
+    spread = select_gap_spread_for_year(ursi, year)
     gap_f0f2_sun = [s[0] for s in spread]
     gap_f0f2_moon = [s[1] for s in spread]
     gap_k_sun = [s[2] for s in spread]
