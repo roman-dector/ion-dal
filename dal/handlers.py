@@ -48,8 +48,8 @@ def get_gap_spread_for_sum_win(
     win_gap_k_moon = [s[3] for s in win]
 
     return {
-        'sun': (sum_gap_f0f2_sun, sum_gap_f0f2_moon, sum_gap_k_sun, sum_gap_k_moon),
-        'moon': (win_gap_f0f2_sun, win_gap_f0f2_moon, win_gap_k_sun, win_gap_k_moon),
+        'sum': (sum_gap_f0f2_sun, sum_gap_f0f2_moon, sum_gap_k_sun, sum_gap_k_moon),
+        'win': (win_gap_f0f2_sun, win_gap_f0f2_moon, win_gap_k_sun, win_gap_k_moon),
     }
 
 
