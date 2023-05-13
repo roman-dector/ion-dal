@@ -45,7 +45,7 @@ files = []
 
 
 async def as_main():
-    for y in [19]:
+    for y in [20, 21, 22]:
         async for d in async_range(1, 366):
             day = f'00{d}' if d < 10 else (f'0{d}' if d < 100 else f'{d}')
             ionex_file = f'esag{day}0.{y}i'
