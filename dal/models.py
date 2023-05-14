@@ -79,6 +79,8 @@ class AccuracyJmodel(Model):
 
     gap_f0f2_sun = FloatField()
     gap_f0f2_moon = FloatField()
+    gap_pers_f0f2_sun = FloatField()
+    gap_pers_f0f2_moon = FloatField()
     gap_k_sun = FloatField()
     gap_k_moon = FloatField()
 
