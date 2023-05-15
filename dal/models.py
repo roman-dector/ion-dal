@@ -678,6 +678,49 @@ def select_gap_spread_for_month(ursi, month, year):
     return res.fetchall()
 
 
+
+def select_gap_pers_spread_for_sum(
+    ursi: str,
+    year: int,
+):
+    coords = select_coords_by_ursi(ursi)
+
+    res = cur.execute(f'''
+        select
+            gap_pers_f0f2_sun,
+            gap_pers_f0f2_moon
+        from accuracy_jmodel
+        where ursi = '{ursi}' and
+            (
+                date glob IIF({coords['lat']} > 0, '{year}-0[5, 6, 7, 8, 9]*', '{year}-0[1, 2, 3, 4]*') or
+                date glob IIF({coords['lat']} > 0, '{year}-10*', '{year}-[11, 12]*')
+            )
+        ;'''
+    )
+    return res.fetchall()
+
+
+def select_gap_pers_spread_for_win(
+    ursi: str,
+    year: int,
+):
+    coords = select_coords_by_ursi(ursi)
+
+    res = cur.execute(f'''
+        select
+            gap_pers_f0f2_sun,
+            gap_pers_f0f2_moon
+        from accuracy_jmodel
+        where ursi = '{ursi}' and
+            (
+                date glob IIF({coords['lat']} > 0, '{year}-0[1, 2, 3, 4]*', '{year}-0[5, 6, 7, 8, 9]*') or
+                date glob IIF({coords['lat']} > 0, '{year}-[11, 12]*', '{year}-10*')
+            )
+        ;'''
+    )
+    return res.fetchall()
+
+
 def select_gap_spread_for_sum(
     ursi: str,
     year: int,
